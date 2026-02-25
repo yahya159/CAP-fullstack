@@ -1,0 +1,7 @@
+ID,projectId,title,description,status,priority,assigneeId,plannedStart,plannedEnd,realStart,realEnd,progressPercent,estimatedHours,actualHours,effortHours,isCritical,riskLevel,comments
+task-1,proj-1,Design FI data migration mapping,Map legacy FI account structures to S/4HANA chart of accounts.,IN_PROGRESS,HIGH,u-tech,2026-01-10,2026-02-10,2026-01-12,,60,80,48,50,true,MEDIUM,
+task-2,proj-1,SD module configuration,Configure Sales and Distribution pricing conditions.,TO_DO,MEDIUM,u-fonc,2026-02-15,2026-03-15,,,0,60,0,0,false,LOW,
+task-3,proj-2,Build KPI tile components,Create SAPUI5 KPI tiles using OVP card framework.,DONE,HIGH,u-tech,2026-02-01,2026-02-20,2026-02-01,2026-02-18,100,40,38,38,false,NONE,
+task-4,proj-2,Integration with backend OData services,Expose BW queries via CAP OData v4.,IN_PROGRESS,HIGH,u-devco,2026-02-18,2026-03-10,2026-02-19,,40,50,20,22,true,HIGH,
+task-5,proj-3,Audit existing BW reports,List all active BW InfoProvider reports for migration.,BLOCKED,LOW,u-fonc,2025-11-15,2025-12-15,,,20,30,6,6,false,HIGH,
+task-6,proj-1,User acceptance testing FI module,Execute UAT test scripts with key users.,TO_DO,CRITICAL,u-pm,2026-04-01,2026-04-30,,,0,100,0,0,true,MEDIUM,

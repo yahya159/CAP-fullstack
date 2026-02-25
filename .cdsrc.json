@@ -1,0 +1,21 @@
+{
+  "requires": {
+    "db": {
+      "kind": "sqlite",
+      "credentials": {
+        "database": "db/performance.db"
+      }
+    }
+  },
+  "features": {
+    "fetch_csrf": false,
+    "serve_on_root": false,
+    "odata_new_parser": true
+  },
+  "odata": {
+    "flavour": "v4"
+  },
+  "sql": {
+    "native_hana_associations": false
+  }
+}

@@ -1,0 +1,6 @@
+ID,userId,projectId,allocationPercent,startDate,endDate
+alloc-1,u-tech,proj-1,60,2026-01-01,2026-12-31
+alloc-2,u-fonc,proj-1,50,2026-01-01,2026-12-31
+alloc-3,u-devco,proj-2,80,2026-02-01,2026-08-31
+alloc-4,u-tech,proj-2,30,2026-02-01,2026-08-31
+alloc-5,u-pm,proj-1,40,2026-01-01,2026-12-31

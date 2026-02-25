@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# CAP build output
+gen/
+dist/
+
+# SQLite database (runtime artifact – seed via cds deploy)
+db/*.db
+db/*.db-journal
+db/*.db-wal
+db/*.db-shm
+
+# CDS build cache
+.cds-build/
+.build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo

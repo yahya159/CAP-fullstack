@@ -1,0 +1,3 @@
+ID,title,description,type,content,attachedFiles,relatedTicketIds,projectId,authorId,createdAt,sourceSystem,sourceRefId
+doc-1,FI Migration Architecture,Architecture overview for the FI data migration approach.,ARCHITECTURE_DOC,FI Migration Architecture document.,"[]","[""tk-001""]",proj-1,u-tech,2026-01-20T09:00:00Z,MANUAL,
+doc-2,SD Module Configuration Guide,Detailed SD pricing condition setup guide.,GUIDE,SD Configuration Guide document.,"[]","[]",proj-1,u-fonc,2026-01-25T09:00:00Z,MANUAL,

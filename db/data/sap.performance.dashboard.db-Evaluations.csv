@@ -1,0 +1,2 @@
+ID,userId,evaluatorId,projectId,period,score,qualitativeGrid,feedback,createdAt
+eval-1,u-tech,u-manager,proj-1,2026-Q1,4.2,"{""productivity"":4,""quality"":5,""autonomy"":4,""collaboration"":4,""innovation"":4}",Excellent technical work on FI module migration.,2026-02-01T09:00:00Z

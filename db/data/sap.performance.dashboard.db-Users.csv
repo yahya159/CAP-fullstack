@@ -1,0 +1,7 @@
+ID,name,email,role,active,skills,certifications,availabilityPercent,teamId,avatarUrl
+u-admin,Alice Admin,alice.admin@inetum.com,ADMIN,true,"[""Administration"",""SAP BASIS""]","[]",100,team-1,
+u-manager,Marc Manager,marc.manager@inetum.com,MANAGER,true,"[""Management"",""SAP SD"",""SAP MM""]","[]",80,team-1,
+u-tech,Théo Technique,theo.tech@inetum.com,CONSULTANT_TECHNIQUE,true,"[""ABAP"",""SAP FI"",""Fiori""]","[]",90,team-1,
+u-fonc,Fatima Fonctionnel,fatima.fonc@inetum.com,CONSULTANT_FONCTIONNEL,true,"[""SAP FI"",""SAP CO"",""Project Management""]","[]",75,team-1,
+u-pm,Pierre Projet,pierre.pm@inetum.com,PROJECT_MANAGER,true,"[""Project Management"",""SAP PS""]","[]",60,team-1,
+u-devco,Diana DevCo,diana.devco@inetum.com,DEV_COORDINATOR,true,"[""ABAP"",""Fiori"",""SAP BW""]","[]",85,team-1,

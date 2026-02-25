@@ -1,0 +1,3 @@
+ID,periodKey,consultantId,startDate,endDate,status,totalHours,submittedAt,validatedBy,validatedAt,sentToStraTIME,sentBy,sentAt
+period-1,2026-02-H1,u-tech,2026-02-01,2026-02-15,SUBMITTED,40,2026-02-15T17:00:00Z,,,false,,
+period-2,2026-01-H2,u-tech,2026-01-16,2026-01-31,VALIDATED,36,2026-01-31T17:00:00Z,u-pm,2026-02-03T10:00:00Z,false,,

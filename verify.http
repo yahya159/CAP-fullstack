@@ -1,0 +1,179 @@
+### CAP OData v4 Performance Backend – Verification Requests
+### Run these against: http://localhost:4004
+
+# --------------------------------------------------------------------------
+# TICKETS – List with paging + count
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Tickets?$top=3&$skip=0&$count=true&$orderby=createdAt desc
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# TICKETS – Filter by status
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Tickets?$filter=status eq 'IN_PROGRESS'
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# TICKETS – Filter by project
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Tickets?$filter=projectId eq 'proj-1'&$orderby=createdAt desc
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# TICKETS – Get single ticket by ID
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Tickets('tk-001')
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# TICKETS – Create a new ticket
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/Tickets
+Content-Type: application/json
+Accept: application/json
+
+{
+  "projectId": "proj-1",
+  "createdBy": "u-manager",
+  "assignedTo": "u-tech",
+  "assignedToRole": "CONSULTANT_TECHNIQUE",
+  "status": "NEW",
+  "priority": "MEDIUM",
+  "nature": "PROGRAMME",
+  "title": "Verify AP payment run after migration",
+  "description": "Run AP payment run T-code F110 and confirm no errors.",
+  "module": "FI",
+  "wricefId": "WRICEF-FI-003",
+  "complexity": "SIMPLE",
+  "estimationHours": 8,
+  "effortHours": 0,
+  "history": [],
+  "tags": ["FI", "AP", "UAT"]
+}
+
+###
+
+# --------------------------------------------------------------------------
+# TICKETS – Update (PATCH) status
+# --------------------------------------------------------------------------
+PATCH http://localhost:4004/odata/v4/performance/Tickets('tk-002')
+Content-Type: application/json
+Accept: application/json
+
+{
+  "status": "IN_PROGRESS",
+  "history": [
+    {
+      "id": "te001",
+      "timestamp": "2026-02-25T21:00:00Z",
+      "userId": "u-manager",
+      "action": "STATUS_CHANGE",
+      "fromValue": "NEW",
+      "toValue": "IN_PROGRESS"
+    }
+  ]
+}
+
+###
+
+# --------------------------------------------------------------------------
+# USERS – List active users
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Users?$filter=active eq true
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# PROJECTS – List all ordered by name
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Projects?$orderby=name asc
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# ABAQUES – Get estimation matrix
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Abaques('abq-1')
+Accept: application/json
+
+###
+
+# --------------------------------------------------------------------------
+# IMPUTATIONS – Validate (bound action)
+# POST /Imputations('<id>')/validate
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/Imputations('imp-2')/validate
+Content-Type: application/json
+Accept: application/json
+
+{
+  "validatedBy": "u-pm"
+}
+
+###
+
+# --------------------------------------------------------------------------
+# IMPUTATIONS – Reject (bound action)
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/Imputations('imp-2')/reject
+Content-Type: application/json
+Accept: application/json
+
+{
+  "validatedBy": "u-pm"
+}
+
+###
+
+# --------------------------------------------------------------------------
+# IMPUTATION PERIODS – Submit
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/ImputationPeriods('period-1')/submit
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+###
+
+# --------------------------------------------------------------------------
+# IMPUTATION PERIODS – sendToStraTIME
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/ImputationPeriods('period-1')/sendToStraTIME
+Content-Type: application/json
+Accept: application/json
+
+{
+  "sentBy": "u-pm"
+}
+
+###
+
+# --------------------------------------------------------------------------
+# TIME LOGS – sendToStraTIME (bound action)
+# --------------------------------------------------------------------------
+POST http://localhost:4004/odata/v4/performance/TimeLogs('tl-1')/sendToStraTIME
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+###
+
+# --------------------------------------------------------------------------
+# NOTIFICATIONS – List by user
+# --------------------------------------------------------------------------
+GET http://localhost:4004/odata/v4/performance/Notifications?$filter=userId eq 'u-manager'
+Accept: application/json
+
+###

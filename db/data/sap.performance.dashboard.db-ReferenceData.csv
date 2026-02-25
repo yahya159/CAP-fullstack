@@ -1,0 +1,11 @@
+ID,type,code,label,active,order
+ref-1,PRIORITY,LOW,Low,true,1
+ref-2,PRIORITY,MEDIUM,Medium,true,2
+ref-3,PRIORITY,HIGH,High,true,3
+ref-4,PRIORITY,CRITICAL,Critical,true,4
+ref-5,TASK_STATUS,TO_DO,To Do,true,1
+ref-6,TASK_STATUS,IN_PROGRESS,In Progress,true,2
+ref-7,TASK_STATUS,DONE,Done,true,3
+ref-8,SKILL,ABAP,ABAP Development,true,
+ref-9,SKILL,FIORI,SAP Fiori / UI5,true,
+ref-10,SKILL,FI,SAP FI – Finance,true,
