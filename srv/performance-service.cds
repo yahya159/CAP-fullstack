@@ -26,9 +26,28 @@ service PerformanceService {
   entity LeaveRequests       as projection on db.LeaveRequests;
 
   // ---- Imputation domain ---------------------------------------------------
-  entity Imputations         as projection on db.Imputations;
-  entity ImputationPeriods   as projection on db.ImputationPeriods;
-  entity TimeLogs            as projection on db.TimeLogs;
+  entity Imputations as projection on db.Imputations actions {
+    // POST /Imputations('<id>')/validate  { validatedBy }
+    action validate(validatedBy: String) returns Imputations;
+    // POST /Imputations('<id>')/reject    { validatedBy }
+    action reject(validatedBy: String) returns Imputations;
+  };
+
+  entity ImputationPeriods as projection on db.ImputationPeriods actions {
+    // POST /ImputationPeriods('<id>')/submit
+    action submit() returns ImputationPeriods;
+    // POST /ImputationPeriods('<id>')/validate   { validatedBy }
+    action validate(validatedBy: String) returns ImputationPeriods;
+    // POST /ImputationPeriods('<id>')/reject     { validatedBy }
+    action reject(validatedBy: String) returns ImputationPeriods;
+    // POST /ImputationPeriods('<id>')/sendToStraTIME { sentBy }
+    action sendToStraTIME(sentBy: String) returns ImputationPeriods;
+  };
+
+  entity TimeLogs as projection on db.TimeLogs actions {
+    // POST /TimeLogs('<id>')/sendToStraTIME
+    action sendToStraTIME() returns TimeLogs;
+  };
 
   // ---- Reference / Knowledge -----------------------------------------------
   entity Abaques             as projection on db.Abaques;
@@ -36,20 +55,7 @@ service PerformanceService {
   entity Notifications       as projection on db.Notifications;
   entity ReferenceData       as projection on db.ReferenceData;
 
-  // ---- Bound actions on Imputations ----------------------------------------
-  // POST /Imputations('<id>')/validate  { validatedBy }
-  action validate(validatedBy: String) returns Imputations;
-  // POST /Imputations('<id>')/reject    { validatedBy }
-  action reject(validatedBy: String)   returns Imputations;
-
-  // ---- Bound actions on ImputationPeriods ----------------------------------
-  // POST /ImputationPeriods('<id>')/submit
-  // POST /ImputationPeriods('<id>')/validate   { validatedBy }
-  // POST /ImputationPeriods('<id>')/reject      { validatedBy }
-  // POST /ImputationPeriods('<id>')/sendToStraTIME { sentBy }
-  // (Registered via srv.on() in performance-service.js)
-
-  // ---- Bound actions on TimeLogs ------------------------------------------
-  // POST /TimeLogs('<id>')/sendToStraTIME
-  // (Registered via srv.on() in performance-service.js)
+  // ---- Authentication action ------------------------------------------------
+  // POST /authenticate { email, password }
+  action authenticate(email: String, password: String) returns Users;
 }

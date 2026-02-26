@@ -6,7 +6,8 @@
   "scripts": {
     "start": "cds-serve",
     "watch": "cds watch",
-    "build": "cds build"
+    "build": "cds build",
+    "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
     "@sap/cds": "^8",

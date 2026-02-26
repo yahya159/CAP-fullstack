@@ -1,17 +1,17 @@
 'use strict';
+const crypto = require('node:crypto');
 /**
- * id.js – pure stateless ID helpers.
+ * id.js - pure stateless ID helpers.
  * No imports from other layers.
  */
 
 /**
- * Generate a ticket code in the format TK-YYYY-NNNN
+ * Generate a ticket code in the format TK-YYYY-XXXXXX
  * @param {number} year
- * @param {number} seq – 1-based sequence number for this year
  * @returns {string}
  */
-const generateTicketCode = (year, seq) =>
-  `TK-${year}-${String(seq).padStart(4, '0')}`;
+const generateTicketCode = (year) =>
+  `TK-${year}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
 /**
  * Generate a simple unique ID (fallback when cuid is not available)

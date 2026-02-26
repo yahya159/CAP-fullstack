@@ -35,7 +35,26 @@ entity Projects : cuid, managed {
   documentation   : LargeString;
   linkedAbaqueId  : String(50);
   abaqueEstimate  : LargeString; // JSON object
-  wricef          : LargeString; // JSON object (ProjectWricef)
+}
+
+// ---------------------------------------------------------------------------
+// WRICEFs
+// ---------------------------------------------------------------------------
+entity Wricefs : cuid, managed {
+  projectId       : String(50) not null;
+  sourceFileName  : String(200);
+  importedAt      : DateTime;
+}
+
+entity WricefObjects : cuid, managed {
+  wricefId        : String(50) not null;
+  projectId       : String(50) not null;
+  type            : String(10) not null;
+  title           : String(200) not null;
+  description     : LargeString;
+  complexity      : String(20) default 'SIMPLE';
+  module          : String(20);
+  documentationObjectIds : LargeString; // JSON array
 }
 
 // ---------------------------------------------------------------------------

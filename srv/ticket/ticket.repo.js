@@ -14,13 +14,15 @@ class TicketRepo {
     return cds.db.entities['sap.performance.dashboard.db.Tickets'];
   }
 
-  /** Count tickets for a given project (used for ticketCode generation) */
-  async countForYear(year) {
-    const result = await cds.db.run(
-      `SELECT COUNT(*) as cnt FROM sap_performance_dashboard_db_Tickets
-       WHERE ticketCode LIKE 'TK-${year}-%'`
+  /** Check whether a ticket code already exists */
+  async existsByTicketCode(ticketCode) {
+    const { Tickets } = this;
+    const existing = await cds.db.run(
+      SELECT.one(Tickets)
+        .columns('ID')
+        .where({ ticketCode })
     );
-    return Number(result?.[0]?.cnt ?? 0);
+    return Boolean(existing);
   }
 
   /** Fetch a ticket by ID */

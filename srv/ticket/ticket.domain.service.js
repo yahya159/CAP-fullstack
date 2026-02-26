@@ -15,7 +15,7 @@ class TicketDomainService {
 
   /**
    * beforeCreate – called by impl before CAP inserts the record.
-   * Injects: ticketCode, createdAt, updatedAt, default status/effortHours/history.
+   * Injects: ticketCode, createdAt, default status/effortHours/history.
    */
   async beforeCreate(req) {
     const data = req.data;
@@ -25,23 +25,20 @@ class TicketDomainService {
     if (!data.title)     req.error(400, 'title is required');
     if (!data.nature)    req.error(400, 'nature is required');
 
-    // Auto-generate ticketCode: TK-YYYY-NNNN
+    // Auto-generate ticketCode: TK-YYYY-XXXXXX
     const year = new Date().getFullYear();
-    const count = await this.repo.countForYear(year);
-    data.ticketCode = generateTicketCode(year, count + 1);
+    data.ticketCode = await this._allocateTicketCode(year);
 
     // Defaults
     data.status        = data.status       || 'NEW';
     data.effortHours   = data.effortHours  ?? 0;
     data.estimationHours = data.estimationHours ?? 0;
     data.createdAt     = data.createdAt    || nowIso();
-    data.updatedAt     = nowIso();
 
     // Serialize JSON arrays
     data.history       = this._serializeArray(data.history ?? []);
     data.tags          = this._serializeArray(data.tags ?? []);
     data.documentationObjectIds = this._serializeArray(data.documentationObjectIds ?? []);
-    data.skills        = this._serializeArray(data.skills ?? []);
   }
 
   /**
@@ -50,7 +47,6 @@ class TicketDomainService {
    */
   async beforeUpdate(req) {
     const data = req.data;
-    data.updatedAt = nowIso();
 
     // Re-serialize JSON arrays if they were provided as arrays
     if (Array.isArray(data.history)) {
@@ -93,6 +89,17 @@ class TicketDomainService {
       try { return JSON.parse(value); } catch { return []; }
     }
     return [];
+  }
+
+  async _allocateTicketCode(year) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const candidate = generateTicketCode(year);
+      // Randomized suffix makes collisions unlikely, this guards against rare duplicates.
+      if (!(await this.repo.existsByTicketCode(candidate))) {
+        return candidate;
+      }
+    }
+    throw new Error('Unable to allocate a unique ticketCode');
   }
 }
 

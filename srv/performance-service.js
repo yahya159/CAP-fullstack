@@ -13,10 +13,29 @@
  */
 
 const cds = require('@sap/cds');
+const crypto = require('node:crypto');
 const { nowIso } = require('./shared/utils/timestamp');
 
 // Ticket domain handler – registered via require
 const ticketImpl = require('./ticket/ticket.impl');
+
+const DEMO_PASSWORD_BY_EMAIL = Object.freeze({
+  'alice.admin@inetum.com': 'Admin#2026',
+  'marc.manager@inetum.com': 'Manager#2026',
+  'theo.tech@inetum.com': 'Tech#2026',
+  'fatima.fonc@inetum.com': 'Func#2026',
+  'pierre.pm@inetum.com': 'PM#2026',
+  'diana.devco@inetum.com': 'DevCo#2026',
+});
+
+const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0];
+
+const safeEqual = (left, right) => {
+  const leftBuffer = Buffer.from(String(left ?? ''), 'utf8');
+  const rightBuffer = Buffer.from(String(right ?? ''), 'utf8');
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
 
 module.exports = (srv) => {
   // ---- Register Ticket domain handlers -----------------------------------
@@ -76,13 +95,45 @@ module.exports = (srv) => {
   });
 
   // =========================================================================
+  // AUTHENTICATION ACTION
+  // =========================================================================
+
+  // POST /authenticate { email, password }
+  srv.on('authenticate', async (req) => {
+    const email = String(req.data?.email ?? '').trim().toLowerCase();
+    const password = String(req.data?.password ?? '');
+
+    if (!email || !password) {
+      req.reject(401, 'Invalid credentials');
+      return;
+    }
+
+    const expectedPassword = DEMO_PASSWORD_BY_EMAIL[email];
+    if (!expectedPassword || !safeEqual(password, expectedPassword)) {
+      req.reject(401, 'Invalid credentials');
+      return;
+    }
+
+    const { Users } = srv.entities;
+    const activeUsers = await cds.db.run(SELECT.from(Users).where({ active: true }));
+    const user = activeUsers.find((candidate) => String(candidate.email ?? '').toLowerCase() === email);
+    if (!user) {
+      req.reject(401, 'Invalid credentials');
+      return;
+    }
+
+    return user;
+  });
+
+  // =========================================================================
   // IMPUTATION ACTIONS
   // =========================================================================
 
   // POST /Imputations('<id>')/validate   { validatedBy }
   srv.on('validate', 'Imputations', async (req) => {
     const { Imputations } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing Imputation ID');
     const validatedBy = req.data?.validatedBy;
 
     const changes = {
@@ -99,7 +150,8 @@ module.exports = (srv) => {
   // POST /Imputations('<id>')/reject   { validatedBy }
   srv.on('reject', 'Imputations', async (req) => {
     const { Imputations } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing Imputation ID');
     const validatedBy = req.data?.validatedBy;
 
     const changes = {
@@ -120,7 +172,8 @@ module.exports = (srv) => {
   // POST /ImputationPeriods('<id>')/submit
   srv.on('submit', 'ImputationPeriods', async (req) => {
     const { ImputationPeriods } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
     const changes = { status: 'SUBMITTED', submittedAt: nowIso() };
     await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
     const result = await cds.db.run(SELECT.one(ImputationPeriods).where({ ID: id }));
@@ -131,7 +184,8 @@ module.exports = (srv) => {
   // POST /ImputationPeriods('<id>')/validate   { validatedBy }
   srv.on('validate', 'ImputationPeriods', async (req) => {
     const { ImputationPeriods } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
     const validatedBy = req.data?.validatedBy;
     const changes = { status: 'VALIDATED', validatedBy, validatedAt: nowIso() };
     await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
@@ -143,7 +197,8 @@ module.exports = (srv) => {
   // POST /ImputationPeriods('<id>')/reject   { validatedBy }
   srv.on('reject', 'ImputationPeriods', async (req) => {
     const { ImputationPeriods } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
     const validatedBy = req.data?.validatedBy;
     const changes = { status: 'REJECTED', validatedBy, validatedAt: nowIso() };
     await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
@@ -155,7 +210,8 @@ module.exports = (srv) => {
   // POST /ImputationPeriods('<id>')/sendToStraTIME   { sentBy }
   srv.on('sendToStraTIME', 'ImputationPeriods', async (req) => {
     const { ImputationPeriods } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
     const sentBy = req.data?.sentBy;
     const changes = { sentToStraTIME: true, sentBy, sentAt: nowIso() };
     await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
@@ -171,7 +227,8 @@ module.exports = (srv) => {
   // POST /TimeLogs('<id>')/sendToStraTIME
   srv.on('sendToStraTIME', 'TimeLogs', async (req) => {
     const { TimeLogs } = srv.entities;
-    const id = req.params[0]?.ID ?? req.params[0];
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing TimeLog ID');
     const changes = { sentToStraTIME: true, sentAt: nowIso() };
     await cds.db.run(UPDATE(TimeLogs).where({ ID: id }).with(changes));
     const result = await cds.db.run(SELECT.one(TimeLogs).where({ ID: id }));
