@@ -8,6 +8,7 @@ using { sap.performance.dashboard.db as db } from '../db/schema';
  * CAP auto-discovers this file and loads performance-service.js by convention.
  */
 @path: '/odata/v4/performance'
+@requires: 'authenticated-user'
 service PerformanceService {
 
   // ---- Ticket domain -------------------------------------------------------
@@ -48,6 +49,10 @@ service PerformanceService {
     // POST /TimeLogs('<id>')/sendToStraTIME
     action sendToStraTIME() returns TimeLogs;
   };
+
+  // ---- WRICEF domain ---------------------------------------------------------
+  entity Wricefs             as projection on db.Wricefs;
+  entity WricefObjects       as projection on db.WricefObjects;
 
   // ---- Reference / Knowledge -----------------------------------------------
   entity Abaques             as projection on db.Abaques;

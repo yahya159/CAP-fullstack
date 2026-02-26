@@ -126,113 +126,154 @@ module.exports = (srv) => {
   });
 
   // =========================================================================
+  // STATE-MACHINE: allowed transitions
+  // =========================================================================
+
+  /** Allowed validationStatus transitions for Imputations */
+  const IMPUTATION_TRANSITIONS = {
+    validate: { from: ['DRAFT', 'SUBMITTED', 'REJECTED'], to: 'VALIDATED' },
+    reject:   { from: ['DRAFT', 'SUBMITTED'],              to: 'REJECTED' },
+  };
+
+  /** Allowed status transitions for ImputationPeriods */
+  const PERIOD_TRANSITIONS = {
+    submit:   { from: ['DRAFT', 'REJECTED'],              to: 'SUBMITTED' },
+    validate: { from: ['SUBMITTED'],                       to: 'VALIDATED' },
+    reject:   { from: ['SUBMITTED'],                       to: 'REJECTED' },
+  };
+
+  // =========================================================================
+  // SHARED ACTION HELPER – reduces per-action boilerplate
+  // =========================================================================
+
+  /**
+   * Generic bound-action handler:
+   *   1. Extract entity ID
+   *   2. Fetch current record (fail 404 if missing)
+   *   3. Optionally validate state-machine transition
+   *   4. Apply changes and re-read
+   */
+  const registerBoundAction = ({
+    action,
+    entitySetName,
+    statusField,
+    transitions,
+    buildChanges,
+  }) => {
+    srv.on(action, entitySetName, async (req) => {
+      const EntitySet = srv.entities[entitySetName];
+      const id = extractEntityId(req);
+      if (!id) return req.reject(400, `Missing ${entitySetName} ID`);
+
+      // Fetch current record
+      const current = await cds.db.run(SELECT.one(EntitySet).where({ ID: id }));
+      if (!current) return req.error(404, `${entitySetName} '${id}' not found`);
+
+      // State-machine guard
+      if (transitions) {
+        const rule = transitions[action];
+        if (rule) {
+          const currentStatus = current[statusField];
+          if (!rule.from.includes(currentStatus)) {
+            return req.reject(
+              409,
+              `Cannot ${action} ${entitySetName} '${id}': current ${statusField} is '${currentStatus}', expected one of [${rule.from.join(', ')}]`
+            );
+          }
+        }
+      }
+
+      const changes = buildChanges(req, current);
+      await cds.db.run(UPDATE(EntitySet).where({ ID: id }).with(changes));
+      return cds.db.run(SELECT.one(EntitySet).where({ ID: id }));
+    });
+  };
+
+  // =========================================================================
   // IMPUTATION ACTIONS
   // =========================================================================
 
-  // POST /Imputations('<id>')/validate   { validatedBy }
-  srv.on('validate', 'Imputations', async (req) => {
-    const { Imputations } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing Imputation ID');
-    const validatedBy = req.data?.validatedBy;
-
-    const changes = {
+  registerBoundAction({
+    action: 'validate',
+    entitySetName: 'Imputations',
+    statusField: 'validationStatus',
+    transitions: IMPUTATION_TRANSITIONS,
+    buildChanges: (req) => ({
       validationStatus: 'VALIDATED',
-      validatedBy: validatedBy || null,
+      validatedBy: req.data?.validatedBy || null,
       validatedAt: nowIso(),
-    };
-    await cds.db.run(UPDATE(Imputations).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(Imputations).where({ ID: id }));
-    if (!result) req.error(404, `Imputation '${id}' not found`);
-    return result;
+    }),
   });
 
-  // POST /Imputations('<id>')/reject   { validatedBy }
-  srv.on('reject', 'Imputations', async (req) => {
-    const { Imputations } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing Imputation ID');
-    const validatedBy = req.data?.validatedBy;
-
-    const changes = {
+  registerBoundAction({
+    action: 'reject',
+    entitySetName: 'Imputations',
+    statusField: 'validationStatus',
+    transitions: IMPUTATION_TRANSITIONS,
+    buildChanges: (req) => ({
       validationStatus: 'REJECTED',
-      validatedBy: validatedBy || null,
+      validatedBy: req.data?.validatedBy || null,
       validatedAt: nowIso(),
-    };
-    await cds.db.run(UPDATE(Imputations).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(Imputations).where({ ID: id }));
-    if (!result) req.error(404, `Imputations '${id}' not found`);
-    return result;
+    }),
   });
 
   // =========================================================================
   // IMPUTATION PERIOD ACTIONS
   // =========================================================================
 
-  // POST /ImputationPeriods('<id>')/submit
-  srv.on('submit', 'ImputationPeriods', async (req) => {
-    const { ImputationPeriods } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
-    const changes = { status: 'SUBMITTED', submittedAt: nowIso() };
-    await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(ImputationPeriods).where({ ID: id }));
-    if (!result) req.error(404, `ImputationPeriod '${id}' not found`);
-    return result;
+  registerBoundAction({
+    action: 'submit',
+    entitySetName: 'ImputationPeriods',
+    statusField: 'status',
+    transitions: PERIOD_TRANSITIONS,
+    buildChanges: () => ({ status: 'SUBMITTED', submittedAt: nowIso() }),
   });
 
-  // POST /ImputationPeriods('<id>')/validate   { validatedBy }
-  srv.on('validate', 'ImputationPeriods', async (req) => {
-    const { ImputationPeriods } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
-    const validatedBy = req.data?.validatedBy;
-    const changes = { status: 'VALIDATED', validatedBy, validatedAt: nowIso() };
-    await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(ImputationPeriods).where({ ID: id }));
-    if (!result) req.error(404, `ImputationPeriod '${id}' not found`);
-    return result;
+  registerBoundAction({
+    action: 'validate',
+    entitySetName: 'ImputationPeriods',
+    statusField: 'status',
+    transitions: PERIOD_TRANSITIONS,
+    buildChanges: (req) => ({
+      status: 'VALIDATED',
+      validatedBy: req.data?.validatedBy,
+      validatedAt: nowIso(),
+    }),
   });
 
-  // POST /ImputationPeriods('<id>')/reject   { validatedBy }
-  srv.on('reject', 'ImputationPeriods', async (req) => {
-    const { ImputationPeriods } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
-    const validatedBy = req.data?.validatedBy;
-    const changes = { status: 'REJECTED', validatedBy, validatedAt: nowIso() };
-    await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(ImputationPeriods).where({ ID: id }));
-    if (!result) req.error(404, `ImputationPeriod '${id}' not found`);
-    return result;
+  registerBoundAction({
+    action: 'reject',
+    entitySetName: 'ImputationPeriods',
+    statusField: 'status',
+    transitions: PERIOD_TRANSITIONS,
+    buildChanges: (req) => ({
+      status: 'REJECTED',
+      validatedBy: req.data?.validatedBy,
+      validatedAt: nowIso(),
+    }),
   });
 
-  // POST /ImputationPeriods('<id>')/sendToStraTIME   { sentBy }
-  srv.on('sendToStraTIME', 'ImputationPeriods', async (req) => {
-    const { ImputationPeriods } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing ImputationPeriod ID');
-    const sentBy = req.data?.sentBy;
-    const changes = { sentToStraTIME: true, sentBy, sentAt: nowIso() };
-    await cds.db.run(UPDATE(ImputationPeriods).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(ImputationPeriods).where({ ID: id }));
-    if (!result) req.error(404, `ImputationPeriod '${id}' not found`);
-    return result;
+  registerBoundAction({
+    action: 'sendToStraTIME',
+    entitySetName: 'ImputationPeriods',
+    statusField: 'status',
+    transitions: null, // no state-machine guard — can send anytime
+    buildChanges: (req) => ({
+      sentToStraTIME: true,
+      sentBy: req.data?.sentBy,
+      sentAt: nowIso(),
+    }),
   });
 
   // =========================================================================
   // TIME LOG ACTIONS
   // =========================================================================
 
-  // POST /TimeLogs('<id>')/sendToStraTIME
-  srv.on('sendToStraTIME', 'TimeLogs', async (req) => {
-    const { TimeLogs } = srv.entities;
-    const id = extractEntityId(req);
-    if (!id) req.reject(400, 'Missing TimeLog ID');
-    const changes = { sentToStraTIME: true, sentAt: nowIso() };
-    await cds.db.run(UPDATE(TimeLogs).where({ ID: id }).with(changes));
-    const result = await cds.db.run(SELECT.one(TimeLogs).where({ ID: id }));
-    if (!result) req.error(404, `TimeLog '${id}' not found`);
-    return result;
+  registerBoundAction({
+    action: 'sendToStraTIME',
+    entitySetName: 'TimeLogs',
+    statusField: null,
+    transitions: null,
+    buildChanges: () => ({ sentToStraTIME: true, sentAt: nowIso() }),
   });
 };
